@@ -1,104 +1,97 @@
 <!DOCTYPE html>
-<html lang="th">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Firebase Switch</title>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <title>ควบคุมและแสดงสถานะอุปกรณ์</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script&gt;
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script&gt;
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #121212;
-      color: #f0f0f0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding-top: 100px;
     }
-
-    h1 {
-      margin-bottom: 40px;
-      font-size: 36px;
-      color: #ffffff;
-      text-shadow: 0 0 10px #acacac;
-    }
-
-    .button-container {
-      display: flex;
-      gap: 20px;
-    }
-
     button {
-      font-size: 22px;
-      padding: 15px 50px;
-      border: none;
-      border-radius: 12px;
-      transition: transform 0.2s, box-shadow 0.3s;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      font-size: 20px;
+      padding: 10px 30px;
+      margin: 5px;
+      cursor: pointer;
     }
-
-    button:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+    .on { background-color: green; color: white; }
+    .off { background-color: red; color: white; }
+    .mode-on { background-color: blue; color: white; }
+    .mode-off { background-color: orange; color: white; }
+    #status {
+      font-size: 28px;
+      margin-bottom: 30px;
     }
-
-    .on {
-      background-color: #777777;
-      color: white;
-    }
-
-    .off {
-      background-color: #bc9fff;
-      color: white;
-    }
-
-    .footer {
-      margin-top: 60px;
-      font-size: 14px;
-      color: #888;
+    .status-img {
+      max-width: 150px;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
 
-  <h1>ควบคุมสถานะอุปกรณ์</h1>
-  
-  <div class="button-container">
-    <button class="on" onclick="setStatus(1)">เปิด</button>
-    <button class="off" onclick="setStatus(0)">ปิด</button>
-  </div>
+  <h1>ควบคุมและแสดงสถานะอุปกรณ์</h1>
+  <div id="status">กำลังโหลด...</div>
 
-  <div class="footer">Powered by Firebase | FEAR Project</div>
+  <button class="on" onclick="setStatus(1)">เปิด</button>
+  <button class="off" onclick="setStatus(0)">ปิด</button>
+  <button class="mode-on" onclick="setStatus(2)">เปิดโหมด</button>
+  <button class="mode-off" onclick="setStatus(3)">ปิดโหมด</button>
 
   <script>
-    // Firebase config
     const firebaseConfig = {
-      apiKey: "AIzaSyCFdj-tPkYjExP70Ow-3c6V_3a7hyVnN9A",
-      authDomain: "fear-123c6.firebaseapp.com",
-      projectId: "fear-123c6",
-      storageBucket: "fear-123c6.firebasestorage.app",
-      messagingSenderId: "135123571351",
-      appId: "1:135123571351:web:7c995a4b46e49c0453cfd2",
-      measurementId: "G-GT6MBF5LKK"
+      apiKey: "AIzaSyAe9X9jkqECZ4KX2W1S3LIusxfd3kX3eWI",
+      authDomain: "l123-8d4f4.firebaseapp.com",
+      projectId: "l123-8d4f4",
+      storageBucket: "l123-8d4f4.appspot.com",
+      messagingSenderId: "338261852462",
+      appId: "1:338261852462:web:ed7cf644e8fa8171953abf",
+      measurementId: "G-57C629Z4EK"
     };
 
-    // Init Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // Function to set status
+    const statusDiv = document.getElementById("status");
+
+    const statusText = {
+      0: "สถานะ: ปิด",
+      1: "สถานะ: เปิด",
+      2: "สถานะ: เปิดโหมด",
+      3: "สถานะ: ปิดโหมด"
+    };
+
+    const statusImages = {
+      0: "https://cdn-icons-png.flaticon.com/512/1828/1828665.png&quot;, // รูปปิด
+      1: "https://cdn-icons-png.flaticon.com/512/1828/1828925.png&quot;, // รูปเปิด
+      2: "https://i.pinimg.com/736x/a4/84/28/a4842830b6899a654ad911072c253dc1.jpg&quot;, // เปิดโหมด
+      3: "https://cdn-icons-png.flaticon.com/512/3524/3524662.png&quot;  // ปิดโหมด
+    };
+
+    db.collection("devices").doc("device1")
+      .onSnapshot((doc) => {
+        if (doc.exists) {
+          const status = doc.data().status;
+          const text = statusText[status] || "ไม่ทราบสถานะ";
+          const imgSrc = statusImages[status] || "";
+
+          statusDiv.innerHTML = `
+            ${text}
+            <br><img src="${imgSrc}" class="status-img">
+          `;
+        } else {
+          statusDiv.textContent = "ไม่มีข้อมูล";
+        }
+      });
+
     function setStatus(value) {
       db.collection("devices").doc("device1").set({
         status: value
       }).then(() => {
-        alert("สถานะถูกเปลี่ยนเป็น " + (value === 1 ? "เปิด" : "ปิด"));
+        console.log("เปลี่ยนสถานะสำเร็จ:", value);
       }).catch((error) => {
         console.error("เกิดข้อผิดพลาด: ", error);
       });
